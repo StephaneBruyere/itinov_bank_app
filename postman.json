@@ -1,0 +1,387 @@
+{
+	"info": {
+		"_postman_id": "c0194b26-3633-42f7-b81a-5e0b998d5bbe",
+		"name": "Bank App API with Tests",
+		"description": "Bank App API calls with Keycloak authentication and automated tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11967278"
+	},
+	"item": [
+		{
+			"name": "Get Keycloak Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Token retrieved', function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('access_token');",
+							"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "bank-app",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "{{kc_username}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{kc_password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8081/realms/bank-realm/protocol/openid-connect/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"realms",
+						"bank-realm",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Customer Accounts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/accounts/customer/{{customerId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"accounts",
+						"customer",
+						"{{customerId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Account Transactions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/accounts/{{accountId}}/transactions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"accounts",
+						"{{accountId}}",
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deposit to Account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"amount\": 100 }"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/accounts/{{accountId}}/deposit",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"accounts",
+						"{{accountId}}",
+						"deposit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Withdraw from Account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"amount\": 50 }"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/accounts/{{accountId}}/withdraw",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"accounts",
+						"{{accountId}}",
+						"withdraw"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transfer Between Accounts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"toAccountId\": \"2\", \"amount\": 30 }"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/accounts/{{accountId}}/transfer",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"accounts",
+						"{{accountId}}",
+						"transfer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get current customer's id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+							"pm.test('Token has customer role', function () {",
+							"    var token = pm.collectionVariables.get('access_token');",
+							"    var payload = JSON.parse(atob(token.split('.')[1]));",
+							"    pm.expect(payload.realm_access.roles).to.include('customer');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/public/customers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"public",
+						"customers"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "kc_username",
+			"value": "jane"
+		},
+		{
+			"key": "kc_password",
+			"value": "pass123"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "customerId",
+			"value": "1"
+		},
+		{
+			"key": "accountId",
+			"value": "1"
+		}
+	]
+}

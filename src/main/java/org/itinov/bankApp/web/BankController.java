@@ -1,0 +1,146 @@
+package org.itinov.bankApp.web;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.itinov.bankApp.dto.*;
+import org.itinov.bankApp.dto.TransferRequest;
+import org.itinov.bankApp.service.BankService;
+import org.itinov.bankApp.service.CustomerService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Controller for bank account operations.
+ * All endpoints require the user to be authenticated and have a keycloak 'customer' role.
+ */
+@PreAuthorize("isAuthenticated() and hasRole('customer')")
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/accounts")
+public class BankController {
+
+    private final BankService bankService;
+    private final CustomerService customerService;
+
+    @GetMapping("/customer/{customerId}")
+    @Operation(summary = "Get all accounts for a customer")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "List of accounts returned"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - not the current customer"),
+        @ApiResponse(responseCode = "404", description = "Customer not found")
+    })
+    public ResponseEntity<List<AccountDTO>> getAccounts(@PathVariable Long customerId) {
+        CustomerDTO currentCustomer = customerService.getCurrentCustomer();
+        // Vérifie que l’utilisateur ne demande que ses propres comptes
+        if (!Objects.equals(currentCustomer.id(), customerId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<AccountDTO> accounts = bankService.getAccountsByCustomer(customerId);
+        return ResponseEntity.ok(accounts);
+    }
+
+    @GetMapping("/{accountId}/transactions")
+    @Operation(summary = "Get all transactions for an account")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "List of transactions returned"),
+        @ApiResponse(responseCode = "404", description = "Account not found")
+    })
+    public ResponseEntity<List<TransactionDTO>> getTransactions(@PathVariable Long accountId) {
+        if (notCurrentCustomersAccount(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<TransactionDTO> transactions = bankService.getTransactionsByAccount(accountId);
+        return ResponseEntity.ok(transactions);
+    }
+
+    @PostMapping("/{accountId}/deposit")
+    @Operation(summary = "Deposit money into an account")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Deposit successful"),
+        @ApiResponse(responseCode = "404", description = "Account not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid deposit request")
+    })
+    public ResponseEntity<TransactionDTO> deposit(@PathVariable Long accountId,
+                                                  @Valid @RequestBody DepositRequest request) {
+        if (notCurrentCustomersAccount(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        String performedBy = resolvePerformedBy();
+        TransactionDTO tx = bankService.deposit(accountId, request.amount(), performedBy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tx);
+    }
+
+    @PostMapping("/{accountId}/withdraw")
+    @Operation(summary = "Withdraw money from an account")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Withdrawal successful"),
+        @ApiResponse(responseCode = "404", description = "Account not found"),
+        @ApiResponse(responseCode = "400", description = "Withdrawal would exceed overdraft limit")
+    })
+    public ResponseEntity<TransactionDTO> withdraw(@PathVariable Long accountId,
+                                                   @Valid @RequestBody WithdrawRequest request) {
+        if (notCurrentCustomersAccount(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        String performedBy = resolvePerformedBy();
+        TransactionDTO tx = bankService.withdraw(accountId, request.amount(), performedBy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tx);
+    }
+
+    @PostMapping("/{accountId}/transfer")
+    @Operation(summary = "Transfer money between two accounts")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Transfer successful"),
+        @ApiResponse(responseCode = "404", description = "One of the accounts not found"),
+        @ApiResponse(responseCode = "400", description = "Transfer invalid (overdraft or same account)")
+    })
+    public ResponseEntity<List<TransactionDTO>> transfer(@PathVariable Long accountId,
+                                                         @Valid @RequestBody TransferRequest request) {
+        if (notCurrentCustomersAccount(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        String performedBy = resolvePerformedBy();
+        List<TransactionDTO> tx = bankService.transfer(accountId, request.toAccountId(), request.amount(), performedBy);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tx);
+    }
+
+    /**
+     * Check if the accountId belongs to the current authenticated customer
+     *
+     * @param accountId the account ID to check
+     * @return true if the account does not belong to the current customer, false otherwise
+     */
+    private boolean notCurrentCustomersAccount(Long accountId) {
+        CustomerDTO currentCustomer = customerService.getCurrentCustomer();
+        return currentCustomer.accounts().stream()
+            .map(AccountDTO::id)
+            .noneMatch(id -> Objects.equals(id, accountId));
+    }
+
+    /**
+     * Resolve the username of the authenticated user from the security context.
+     * If the authentication is a JWT, it tries to get the 'preferred_username' claim.
+     * Otherwise, it falls back to the principal name.
+     *
+     * @return the username of the authenticated user, or "unknown" if not available
+     */
+    private String resolvePerformedBy() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            String preferred = jwtAuth.getToken().getClaimAsString("preferred_username");
+            return preferred != null ? preferred : jwtAuth.getName();
+        }
+        return authentication != null ? authentication.getName() : "unknown";
+    }
+
+}
