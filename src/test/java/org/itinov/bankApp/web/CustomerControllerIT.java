@@ -1,7 +1,8 @@
 package org.itinov.bankApp.web;
 
 import org.itinov.bankApp.config.JwtTestConfig;
-import org.itinov.bankApp.dto.CustomerDTO;
+import org.itinov.bankApp.domain.model.Customer;
+import org.itinov.bankApp.service.CustomerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -25,7 +26,7 @@ class CustomerControllerIT {
     MockMvc mockMvc;
 
     @MockitoBean
-    org.itinov.bankApp.service.CustomerService customerService;
+    CustomerService customerService;
 
     @Test
     @DisplayName("/api/public/customers is publicly accessible and returns 200")
@@ -41,7 +42,7 @@ class CustomerControllerIT {
     void currentCustomerRequiresAuth() throws Exception {
         // Stub current customer to simulate authenticated user
         Mockito.when(customerService.getCurrentCustomer())
-            .thenReturn(new CustomerDTO(1L, "Jane Smith", "jane@example.com", java.util.List.of()));
+            .thenReturn(new Customer(1L, "1111-1111-1111-1111", "Jane Smith", "jane@example.com"));
         mockMvc.perform(get("/api/customer")
                 .header("Authorization", "Bearer fake-token")
                 .accept(MediaType.APPLICATION_JSON))

@@ -346,7 +346,7 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/public/customers",
+					"raw": "http://localhost:8080/api/customer",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -354,8 +354,7 @@
 					"port": "8080",
 					"path": [
 						"api",
-						"public",
-						"customers"
+						"customer"
 					]
 				}
 			},

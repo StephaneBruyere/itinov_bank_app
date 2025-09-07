@@ -1,4 +1,4 @@
-package org.itinov.bankApp.domain.model.enums;
+package org.itinov.bankApp.domain.enums;
 
 public enum OperationType {
     DEPOSIT,

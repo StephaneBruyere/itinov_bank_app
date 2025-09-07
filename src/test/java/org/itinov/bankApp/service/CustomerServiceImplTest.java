@@ -1,9 +1,9 @@
 package org.itinov.bankApp.service;
 
 import org.itinov.bankApp.domain.model.Customer;
-import org.itinov.bankApp.domain.repository.CustomerRepository;
-import org.itinov.bankApp.dto.CustomerDTO;
-import org.itinov.bankApp.mapper.BankMapper;
+import org.itinov.bankApp.infrastructure.entity.CustomerEntity;
+import org.itinov.bankApp.infrastructure.repository.CustomerRepository;
+import org.itinov.bankApp.mapper.BankPersistenceMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +25,13 @@ import static org.mockito.Mockito.*;
 public class CustomerServiceImplTest {
 
     private CustomerRepository customerRepository;
-    private BankMapper mapper;
+    private BankPersistenceMapper mapper;
     private CustomerServiceImpl service;
 
     @BeforeEach
     void setup() {
         customerRepository = mock(CustomerRepository.class);
-        mapper = mock(BankMapper.class);
+        mapper = mock(BankPersistenceMapper.class);
         service = new CustomerServiceImpl(customerRepository, mapper);
     }
 
@@ -42,20 +42,20 @@ public class CustomerServiceImplTest {
 
     @Test
     void findAllCustomers_shouldMapEntities() {
-        when(customerRepository.findAll()).thenReturn(List.of(new Customer(), new Customer()));
-        when(mapper.toDTO(any(Customer.class))).thenReturn(new CustomerDTO(1L, "n", "e", List.of()));
+        when(customerRepository.findAll()).thenReturn(List.of(new CustomerEntity(), new CustomerEntity()));
+        when(mapper.toDomain(any(CustomerEntity.class))).thenReturn(new Customer(1L, "111-111-111-111", "n", "e"));
 
-        List<CustomerDTO> list = service.findAllCustomers();
+        List<Customer> list = service.findAllCustomers();
         assertThat(list).hasSize(2);
     }
 
     @Test
     void getById_shouldReturn_whenPresent() {
-        Customer c = new Customer();
+        CustomerEntity c = new CustomerEntity();
         when(customerRepository.findById(5L)).thenReturn(Optional.of(c));
-        when(mapper.toDTO(c)).thenReturn(new CustomerDTO(5L, "n", "e", List.of()));
+        when(mapper.toDomain(c)).thenReturn(new Customer(5L, "111-111-111-111", "n", "e"));
 
-        CustomerDTO dto = service.getById(5L);
+        Customer dto = service.getById(5L);
         assertThat(dto.id()).isEqualTo(5L);
     }
 
@@ -74,11 +74,11 @@ public class CustomerServiceImplTest {
         when(context.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(context);
 
-        Customer customer = Customer.builder().keycloakId(sub).build();
+        CustomerEntity customer = CustomerEntity.builder().keycloakId(sub).build();
         when(customerRepository.findByKeycloakId(sub)).thenReturn(Optional.of(customer));
-        when(mapper.toDTO(customer)).thenReturn(new CustomerDTO(1L, "n", "e", List.of()));
+        when(mapper.toDomain(customer)).thenReturn(new Customer(1L, "111-111-111-111", "n", "e"));
 
-        CustomerDTO current = service.getCurrentCustomer();
+        Customer current = service.getCurrentCustomer();
         assertThat(current).isNotNull();
         verify(customerRepository).findByKeycloakId(sub);
     }
@@ -94,6 +94,6 @@ public class CustomerServiceImplTest {
 
         when(customerRepository.findByKeycloakId(sub)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> service.getCurrentCustomer());
+        assertThrows(IllegalArgumentException.class, () -> service.getCurrentCustomer());
     }
 }

@@ -1,7 +1,7 @@
 package org.itinov.bankApp.dto;
 
-import org.itinov.bankApp.domain.model.enums.Currency;
-import org.itinov.bankApp.domain.model.enums.OperationType;
+import org.itinov.bankApp.domain.enums.Currency;
+import org.itinov.bankApp.domain.enums.OperationType;
 
 import java.time.LocalDateTime;
 

@@ -1,6 +1,6 @@
 package org.itinov.bankApp.dto;
 
-import org.itinov.bankApp.domain.model.enums.Currency;
+import org.itinov.bankApp.domain.enums.Currency;
 
 import java.util.List;
 

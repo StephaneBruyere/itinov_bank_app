@@ -1,9 +1,9 @@
 package org.itinov.bankApp.service;
 
 import lombok.RequiredArgsConstructor;
-import org.itinov.bankApp.domain.repository.CustomerRepository;
-import org.itinov.bankApp.dto.CustomerDTO;
-import org.itinov.bankApp.mapper.BankMapper;
+import org.itinov.bankApp.domain.model.Customer;
+import org.itinov.bankApp.infrastructure.repository.CustomerRepository;
+import org.itinov.bankApp.mapper.BankPersistenceMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,18 +18,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 @Transactional
-public class CustomerServiceImpl implements CustomerService {
+class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepo;
-    private final BankMapper mapper;
+    private final BankPersistenceMapper mapper;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<CustomerDTO> findAllCustomers() {
+    public List<Customer> findAllCustomers() {
         return customerRepo.findAll().stream()
-            .map(mapper::toDTO)
+            .map(mapper::toDomain)
             .toList();
     }
 
@@ -37,9 +37,9 @@ public class CustomerServiceImpl implements CustomerService {
      * {@inheritDoc}
      */
     @Override
-    public CustomerDTO getById(Long customerId) {
+    public Customer getById(Long customerId) {
         return customerRepo.findById(customerId)
-            .map(mapper::toDTO)
+            .map(mapper::toDomain)
             .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
     }
 
@@ -47,13 +47,13 @@ public class CustomerServiceImpl implements CustomerService {
      * {@inheritDoc}
      */
     @Override
-    public CustomerDTO getCurrentCustomer() {
+    public Customer getCurrentCustomer() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt principal = (Jwt) authentication.getPrincipal();
 
         String keycloakId = principal.getSubject(); // le "sub" dans le token
         return customerRepo.findByKeycloakId(keycloakId)
-            .map(mapper::toDTO)
+            .map(mapper::toDomain)
             .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
     }
 }

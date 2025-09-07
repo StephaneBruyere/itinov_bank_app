@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 /**
- * Request body for a withdraw operation.
+ * Request body for a withdrawal operation.
  */
 public record WithdrawRequest(
     @NotNull(message = "amount is required")

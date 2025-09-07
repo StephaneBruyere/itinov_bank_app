@@ -10,18 +10,25 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.util.List;
+
 /**
  * Mapper interface for converting between domain models and DTOs.
  * Uses MapStruct to generate the implementation at compile time.
  */
 @Mapper(componentModel = "spring")
-public interface BankMapper {
+public interface BankAPIMapper {
+
     CustomerDTO toDTO(Customer customer);
+
+    List<CustomerDTO> toCustomerDTOs(List<Customer> customers);
 
     // Mapping "complet" d'un compte: inclut ses transactions,
     // mais ces dernières utiliseront un mapping de transaction
     // qui ne remappe pas des comptes "complets" (voir plus bas).
     AccountDTO toDTO(Account account);
+
+    List<AccountDTO> toAccountDTOs(List<Account> accounts);
 
     // Mapping "léger" d'un compte: pas de transactions -> casse la récursion
     @Named("accountShallow")
@@ -33,5 +40,7 @@ public interface BankMapper {
     // On force l'utilisation du mapping "shallow" pour account.
     @Mapping(target = "account", qualifiedByName = "accountShallow")
     TransactionDTO toDTO(Transaction transaction);
+
+    List<TransactionDTO> toTransactionDTOs(List<Transaction> transactions);
 
 }

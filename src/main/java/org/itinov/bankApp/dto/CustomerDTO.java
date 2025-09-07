@@ -1,7 +1,5 @@
 package org.itinov.bankApp.dto;
 
-import java.util.List;
-
 /**
  * Data Transfer Object representing a Customer.
  * Contains customer details and a list of associated accounts.
@@ -9,7 +7,6 @@ import java.util.List;
 public record CustomerDTO(
     Long id,
     String name,
-    String email,
-    List<AccountDTO> accounts
+    String email
 ) {
 }

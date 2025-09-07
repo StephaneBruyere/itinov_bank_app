@@ -1,13 +1,13 @@
 package org.itinov.bankApp.config;
 
-import org.itinov.bankApp.domain.model.Account;
-import org.itinov.bankApp.domain.model.Customer;
-import org.itinov.bankApp.domain.model.Transaction;
-import org.itinov.bankApp.domain.model.enums.Currency;
-import org.itinov.bankApp.domain.model.enums.OperationType;
-import org.itinov.bankApp.domain.repository.AccountRepository;
-import org.itinov.bankApp.domain.repository.CustomerRepository;
-import org.itinov.bankApp.domain.repository.TransactionRepository;
+import org.itinov.bankApp.domain.enums.Currency;
+import org.itinov.bankApp.domain.enums.OperationType;
+import org.itinov.bankApp.infrastructure.entity.AccountEntity;
+import org.itinov.bankApp.infrastructure.entity.CustomerEntity;
+import org.itinov.bankApp.infrastructure.entity.TransactionEntity;
+import org.itinov.bankApp.infrastructure.repository.AccountRepository;
+import org.itinov.bankApp.infrastructure.repository.CustomerRepository;
+import org.itinov.bankApp.infrastructure.repository.TransactionRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,13 +34,13 @@ public class DataInitializer {
             Random random = new Random();
 
             // --- Customers ---
-            Customer jane = Customer.builder()
+            CustomerEntity jane = CustomerEntity.builder()
                 .keycloakId("11111111-1111-1111-1111-111111111111")
                 .name("Jane Smith")
                 .email("jane@example.com")
                 .build();
 
-            Customer john = Customer.builder()
+            CustomerEntity john = CustomerEntity.builder()
                 .keycloakId("22222222-2222-2222-2222-222222222222")
                 .name("John Doe")
                 .email("john@example.com")
@@ -49,22 +49,22 @@ public class DataInitializer {
             customerRepo.saveAll(List.of(jane, john));
 
             // --- Accounts ---
-            List<Account> accounts = List.of(
-                Account.builder()
+            List<AccountEntity> accounts = List.of(
+                AccountEntity.builder()
                     .number("ACC-JANE-001")
                     .balance(1000.0)
                     .currency(Currency.EUR)
                     .customer(jane)
                     .overdraftLimit(-100.0)
                     .build(),
-                Account.builder()
+                AccountEntity.builder()
                     .number("ACC-JANE-002")
                     .balance(1500.0)
                     .currency(Currency.EUR)
                     .customer(jane)
                     .overdraftLimit(-200.0)
                     .build(),
-                Account.builder()
+                AccountEntity.builder()
                     .number("ACC-JOHN-001")
                     .balance(2000.0)
                     .currency(Currency.EUR)
@@ -76,7 +76,7 @@ public class DataInitializer {
             accountRepo.saveAll(accounts);
 
             // --- Generate random transactions ---
-            List<Transaction> allTransactions = accounts.stream()
+            List<TransactionEntity> allTransactions = accounts.stream()
                 .flatMap(account ->
                     IntStream.range(0, 10)
                         .mapToObj(i -> {
@@ -102,7 +102,7 @@ public class DataInitializer {
                             // For simplicity, we skip creating a second transaction for the target account
                             // In a real scenario, we'd select another account and create a corresponding transaction
 
-                            return Transaction.builder()
+                            return TransactionEntity.builder()
                                 .date(LocalDateTime.now().minusDays(10 - i))
                                 .amount(amount)
                                 .type(type)

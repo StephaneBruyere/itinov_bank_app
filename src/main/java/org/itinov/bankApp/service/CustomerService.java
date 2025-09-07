@@ -1,6 +1,6 @@
 package org.itinov.bankApp.service;
 
-import org.itinov.bankApp.dto.CustomerDTO;
+import org.itinov.bankApp.domain.model.Customer;
 
 import java.util.List;
 
@@ -11,24 +11,24 @@ public interface CustomerService {
     /**
      * Retrieves a list of all customers.
      *
-     * @return a list of CustomerDTOs representing all customers
+     * @return a list of CustomerDTOs representing all customers in the domain model
      */
-    List<CustomerDTO> findAllCustomers();
+    List<Customer> findAllCustomers();
 
     /**
      * Retrieves a customer by their ID.
      *
      * @param customerId the ID of the customer
-     * @return a CustomerDTO representing the customer
+     * @return a CustomerDTO representing the customer in the domain model
      * @throws IllegalArgumentException if the customer is not found
      */
-    CustomerDTO getById(Long customerId);
+    Customer getById(Long customerId);
 
     /**
      * Retrieves the currently authenticated customer.
      *
-     * @return a CustomerDTO representing the current customer
+     * @return a Customer representing the current customer in the domain model
      * @throws IllegalArgumentException if the customer is not found
      */
-    CustomerDTO getCurrentCustomer();
+    Customer getCurrentCustomer();
 }

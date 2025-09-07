@@ -31,6 +31,16 @@ class AuthControllerIT {
     AuthController authController;
 
     @Test
+    @DisplayName("AuthController returns 400 for validation errors (missing fields)")
+    void tokenValidationError() throws Exception {
+        mockMvc.perform(post("/api/public/auth/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"\"}"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("AuthController proxies token request successfully")
     void tokenOk() throws Exception {
         RestTemplate rt = new RestTemplate();
